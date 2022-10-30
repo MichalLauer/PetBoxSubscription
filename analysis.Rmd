@@ -169,6 +169,29 @@ data <-
 fct_count(data$pet_type)
 ```
 
+# Product vs. Price
+```{r }
+pallette <- c("#12db43", "#2adf4a", "#39e252", "#45e659", "#50e960",
+              "#5aed67", "#63f16d", "#6bf474", "#73f87b", "#7bfb81", "#83ff88")
+data |> 
+  ggplot(aes(x    = reorder(product_category, price_usd, FUN = median),
+             fill = reorder(product_category, price_usd, FUN = median),
+             y = price_usd)) +
+  geom_boxplot(show.legend = F) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = rev(pallette)) +
+  theme_classic() +
+  coord_flip() +
+  labs(
+    title = "The most expensive product categories are toys, bedding, and clothes",
+    subtitle = "The cheapest are supplements, food, and accessory",
+    x = "Product cagetory",
+    y = "Price ($)",
+    caption = "Michal Lauer for DataCamp, laumi.me"
+  )
+```
+
+
 # Pet type vs. Total sales
 ```{r pet-vs-total-sales}
 pet_total <-
@@ -188,7 +211,8 @@ pet_total |>
   labs(
     title = "Most sales are made for cats and dogs",
     x = "Pet type",
-    y = "Sales ($)"
+    y = "Sales ($)",
+    caption = "Michal Lauer for DataCamp, laumi.me"
   )
 ```
 
@@ -234,7 +258,8 @@ rbt_data |>
                        "({diff_rel(rbt_data$p)} %), ",
                        "p-value: {format.pval(rbt_p$p.value)}"),
        x = "Was item rebought?",
-       caption = "Michal Lauer, laumi.me")
+    caption = "Michal Lauer for DataCamp, laumi.me"
+    )
 ```
 
 From the figure above, it can be seen that 
@@ -274,7 +299,7 @@ data |>
            "p-value: {format.pval(sp$p.value)}"),
     x = "Was item rebought?",
     y = "Sales",
-    caption = "Michal Lauer, laumi.me"
+    caption = "Michal Lauer for DataCamp, laumi.me"
   )
 ```
 
@@ -309,6 +334,6 @@ mtb |>
     subtitle = "Top 3 producs for all animals are toys, snacks, and equipment",
     x = "Product category",
     y = "Total number of sales",
-    caption = "Michal Lauer, laumi.me"
+    caption = "Michal Lauer for DataCamp, laumi.me"
   )
 ```
