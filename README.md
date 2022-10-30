@@ -1,4 +1,4 @@
-# Travel Assured analysis
+# Pet Box Subscription analysis
 
 The original [assignment](docs/Assignment.pdf) and [data file](input/pet_sales.csv)
 were provided by [DataCamp.com](https://www.datacamp.com/). This project was 
