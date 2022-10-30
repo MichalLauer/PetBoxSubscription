@@ -176,7 +176,7 @@ The first question asked by the marketing team is:
 
 > How many products are being purchased more than once?
 
-```{r rebougt_plot_data}
+```{r rebougt-plot}
 # Compute data set for further analysis
 rbt_data <- 
   data |> 
@@ -224,7 +224,7 @@ The second question that is being asked is regarding sales.
 
 > Do the products being purchased again have better sales than others?
 
-```{r }
+```{r purchased-again}
 # Formatted sale means
 sf <-
   data |> 
@@ -264,7 +264,7 @@ The final question asked by the marketing team is:
 > What products are more likely to be purchased again for different types of
 pets?
 
-```{r }
+```{r more-likely-again}
 cnt_data <-
   data |> 
   count(re_buy, pet_type) |> 
