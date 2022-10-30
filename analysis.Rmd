@@ -169,6 +169,28 @@ data <-
 fct_count(data$pet_type)
 ```
 
+# Pet type vs. Total sales
+```{r pet-vs-total-sales}
+pet_total <-
+  data |> 
+  group_by(pet_type) |> 
+  summarise(sales_usd = sum(sales_usd)) |> 
+  mutate(pet_type = fct_reorder(.f = pet_type, .x = sales_usd),
+         pet_type = fct_rev(pet_type))
+
+pet_total |> 
+  ggplot(aes(x = pet_type, y = sales_usd, fill = pet_type)) +
+  geom_col(show.legend = F) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_x_discrete(limits = rev) +
+  scale_fill_brewer(type = "div") +
+  theme_classic() +
+  labs(
+    title = "Most sales are made for cats and dogs",
+    x = "Pet type",
+    y = "Sales ($)"
+  )
+```
 
 # Business questions
 
