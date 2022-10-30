@@ -1,0 +1,11 @@
+# RStudio files
+.Renviron
+.RData
+.Rprofile
+.Rhistory
+
+# RStudio folders
+.Rproj.user/
+
+# Project folders
+output/

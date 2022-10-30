@@ -1,0 +1,296 @@
+---
+title: "Vliv virtuality na výkonnost týmu"
+author: "Michal Lauer"
+date: "`r format(Sys.time(), format = '%d. %m. %Y')`"
+output:
+  html_document:
+    theme: paper
+    css: "assets/css/style.css"
+    df_print: kable
+    highlight: zenburn
+    code_folding: hide
+    toc: true
+    toc_float: true
+editor_options:
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_dir = "output/")})
+---
+```{r setup, include=F}
+# Environment preparation
+cat("\f")
+rm(list = ls())
+# Clear output
+if (dir.exists("output") & !isTRUE(getOption("knitr.in.progress"))) {
+  unlink("output", recursive = T)
+}
+# RMarkdown requirements for renv
+require("rmarkdown")
+require("yaml")
+# knitr setting
+knitr::opts_chunk$set(
+  fig.align = "center",
+  fig.path = "output/imgs/",
+  fig.width = 9,
+  fig.height = 7,
+  dev = c("svg", "png")
+)
+# # gtsummary theme
+# gtsummary::set_gtsummary_theme(list(
+#   "style_number-arg:big.mark" = " "
+# ))
+# Function for printing vector length
+len  <- function(fc) length(unique(fc))
+diff_abs <- function(c) abs(c[2] - c[1])
+diff_rel <- function(c) round(abs(c[2] - c[1])*100, 2)
+```
+
+# Preface
+
+Purpose of this project was to get a Data Analyst Associate certification
+by DataCamp. The data is artificial and do not represent a real customer.
+The owner of the assignment and the data is DataCamp.
+
+# Introduction
+
+PetMind is a nationwide pet product retailer in the United States. With
+inflation hitting 41-year highs, the company is planning to reduce the cost of
+customer retention by improving brand loyalty. The first strategy is to launch
+a monthly pet box subscription in three months.
+
+The marketing team is preparing a list of popular products for the pet box
+subscription. The chief marketing officer wants to know whether the list should
+only include the products being purchased more than once.
+
+The marketing team would like to answer the following questions to help
+with the decision:
+
+> How many products are being purchased more than once? </br>
+> Do the products being purchased again have better sales than others? </br>
+> What products are more likely to be purchased again for different types of pets?
+
+# Libraries
+
+This block loads all libraries.
+
+```{r libs, message=F, warning=F}
+# Data wrangling
+library(readr)
+library(dplyr)
+library(forcats)
+
+# Data visualization
+library(skimr)
+library(ggplot2)
+
+# Text manipulation
+library(glue)
+library(stringr)
+library(tidytext)
+```
+
+# Data preparation
+
+The raw data set is first inspected before any further changes are made.
+
+```{r data_raw}
+data_raw <-
+  read_csv(
+    file = "input/pet_sales.csv",
+    col_types = cols(
+      product_id = col_double(),
+      product_category = col_character(),
+      sales = col_character(),
+      price = col_double(),
+      vendor_id = col_character(),
+      pet_size = col_character(),
+      pet_type = col_character(),
+      rating = col_double(),
+      re_buy = col_double()
+    )
+  )
+
+head(data_raw)
+```
+
+The data needs to be first cleaned. In the clean data, the
+
+- *product_id* is factorized,
+- *product_category* is factorized,
+- *sales* is parsed to numerical column *sales_usd*,
+- *price* is renamed to *price_usd*,
+- *vendor_id* is factorized,
+- *pet_size* is ordered and factorized,
+- *pet_type* is factorized,
+- *rating* is parsed as integer, and
+- *re_buy* is factorized.
+
+```{r data_unfiltered}
+pet_size_levels <- c("extra_small", "small", "medium", "large", "extra_large")
+data_unfiltered <- 
+  data_raw |> 
+  mutate(product_id       = factor(product_id),
+         product_category = factor(product_category),
+         sales_usd        = parse_number(sales),
+         price_usd        = price,
+         vendor_id        = factor(vendor_id),
+         pet_size         = factor(pet_size,
+                                   levels = pet_size_levels, ordered = T),
+         pet_type         = factor(pet_type),
+         rating           = as.integer(rating),
+         re_buy           = factor(x = as.logical(re_buy),
+                                   labels = c("TRUE" = "Rebought",
+                                              "FALSE" = "Not rebought"))) |> 
+  relocate(sales_usd, .before = sales) |> 
+  select(-sales)
+
+skim_without_charts(data_unfiltered)
+```
+
+There is `r nrow(data)` spanning across `r ncol(data)` different columns.
+There are `r len(data_unfiltered$pet_size)` different **pet sizes**,
+`r len(data_unfiltered$pet_type)` different **pet types**, and
+`r len(data_unfiltered$product_category)` **product categories**. **Product id**
+and **vendor id** is different for each product, which means that product id uniquely identifies each product and each product has exactly one vendor.
+**Sales** and **price** are normally distributed.
+
+From the assignment, only *some* pet types should be considered
+```{r data}
+# Considered pet types
+considered_types <- c("cat", "dog", "fish", "bird")
+# Data filtering
+data <-
+  data_unfiltered |> 
+  filter(pet_type %in% considered_types) |> 
+  mutate(pet_type = fct_drop(pet_type))
+
+fct_count(data$pet_type)
+```
+
+
+# Rebought products
+
+The first question asked by the marketing team is:
+
+> How many products are being purchased more than once?
+
+```{r rebougt_plot_data}
+# Compute data set for further analysis
+rbt_data <- 
+  data |> 
+  count(re_buy) |> 
+  mutate(p = n/sum(n))
+# Get p-valuye
+rbt_p <- prop.test(x = rbt_data$n,
+                        n = rep(nrow(data), times = 2))
+# Plot data
+rbt_data |> 
+  ggplot(aes(color = re_buy)) +
+  # Lollipop head
+  geom_point(aes(x = re_buy, y = n), size = 3) +
+  # Lollipop body
+  geom_segment(aes(x = re_buy, xend = re_buy, y = 0, yend = n), size = 1) + 
+  # Lollipop description
+  geom_text(aes(x = re_buy, y = n, label = glue("{n} ({round(p*100, 2)} %)")),
+            nudge_y = 20, color = "black") +
+  scale_y_continuous(name = "Absolute count",
+                     limits = c(0, 620),
+                     breaks = seq(0, 600, by = 100),
+                     expand = c(0, 0),
+                     sec.axis = sec_axis(name = "Relative proportion",
+                                         trans = ~ ./nrow(data),
+                                         breaks = seq(0, 1, by = 0.1),
+                                         labels = scales::percent_format())) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  labs(title = "Items are usually not rebought",
+       subtitle = glue("Absolute difference of {diff_abs(rbt_data$n)} ",
+                       "({diff_rel(rbt_data$p)} %), ",
+                       "p-value: {format.pval(rbt_p$p.value)}"),
+       x = "Was item rebought?",
+       caption = "Michal Lauer, laumi.me")
+```
+
+From the figure above, it can be seen that 
+`r filter(rbt_data, re_buy == "Rebought")$n` products
+(`r round(filter(rbt_data, re_buy == "Rebought")$p*100, 2)` %) of
+products are being rebought.
+
+# Sales for rebought items
+
+The second question that is being asked is regarding sales.
+
+> Do the products being purchased again have better sales than others?
+
+```{r }
+# Formatted sale means
+sf <-
+  data |> 
+  group_by(re_buy) |> 
+  summarise(mean = round(mean(sales_usd)/100, 0),
+            mean = prettyNum(mean, big.mark = " "),
+            mean = glue("{mean}K"))
+# Sales p-value
+sp <- t.test(sales_usd ~ re_buy, data = data)
+# Sales plot
+data |> 
+  ggplot(aes(x = re_buy, y = sales_usd)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  theme_classic() +
+  labs(
+    title =
+      glue("There is no significant difference between rebought and not ",
+           "rebought items."),
+    subtitle =
+      glue("Rebought mean: {filter(sf, re_buy == 'Rebought')$mean}, ",
+           "Not rebought mean: {filter(sf, re_buy == 'Not rebought')$mean}, ",
+           "p-value: {format.pval(sp$p.value)}"),
+    x = "Was item rebought?",
+    y = "Sales",
+    caption = "Michal Lauer, laumi.me"
+  )
+```
+
+There is no significant difference between sales for rebought and Not rebought
+items.
+
+# Different producs for different pets
+
+The final question asked by the marketing team is:
+
+> What products are more likely to be purchased again for different types of
+pets?
+
+```{r }
+cnt_data <-
+  data |> 
+  count(re_buy, pet_type) |> 
+  mutate(pet_type = reorder_within(pet_type, n, re_buy))
+
+cnt_data |> 
+  ggplot(aes(x = pet_type, y = n, fill = re_buy)) +
+  geom_col(show.legend = F) + 
+  facet_wrap(vars(re_buy), scales = "free_x") +
+  scale_x_reordered() +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 199)) +
+  theme_classic() +
+  theme(
+    panel.grid.major.y = element_line(colour = "grey80"),
+    panel.grid.minor.y = element_line(colour = "grey90")
+  ) +
+  labs(
+    title = "Most rebought items are for cats and dogs",
+    subtitle = "They are also most sold without a rebuy",
+    x = "Pet type",
+    y = "Total number of products",
+    caption = "Michal Lauer, laumi.me"
+  )
+```
+
+# Summary
+
+As the majority of items is being robought, the marketing team should implement
+their subscription box.
