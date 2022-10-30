@@ -123,7 +123,7 @@ The data needs to be first cleaned. In the clean data, the
 - *price* is renamed to *price_usd*,
 - *vendor_id* is factorized,
 - *pet_size* is ordered and factorized,
-- *pet_type* is factorized,
+- *pet_type* is factorized and transformed to title case,
 - *rating* is parsed as integer, and
 - *re_buy* is factorized.
 
@@ -138,7 +138,7 @@ data_unfiltered <-
          vendor_id        = factor(vendor_id),
          pet_size         = factor(pet_size,
                                    levels = pet_size_levels, ordered = T),
-         pet_type         = factor(pet_type),
+         pet_type         = factor(str_to_title(pet_type)),
          rating           = as.integer(rating),
          re_buy           = factor(x = as.logical(re_buy),
                                    labels = c("TRUE" = "Rebought",
@@ -157,9 +157,10 @@ and **vendor id** is different for each product, which means that product id uni
 **Sales** and **price** are normally distributed.
 
 From the assignment, only *some* pet types should be considered
+
 ```{r data}
 # Considered pet types
-considered_types <- c("cat", "dog", "fish", "bird")
+considered_types <- c("Cat", "Dog", "Fish", "Bird")
 # Data filtering
 data <-
   data_unfiltered |> 
@@ -169,7 +170,33 @@ data <-
 fct_count(data$pet_type)
 ```
 
-# Product vs. Price
+# Characteristics of pet size for each animal type
+
+```{r size-vs-type}
+size_type <- 
+  data |> 
+  mutate(pet_size = fct_rev(pet_size),
+         pet_type = fct_relevel(pet_type, "Fish", after = 2),
+         pet_size = fct_relabel(pet_size,
+           .fun = ~ str_to_sentence(str_replace_all(.x, "_", " "))
+         ))
+
+size_type |> 
+  ggplot(aes(x = pet_size, fill = pet_type)) +
+  geom_bar(show.legend = F) +
+  facet_wrap(vars(pet_type), nrow = 2) +
+  coord_flip() +
+  theme_classic() +
+  labs(
+    title = "Cats tend to be larger than dogs and fish tend to be smaller than birds",
+    x = "Pet size",
+    y = "Absolute count",
+    caption = "Michal Lauer for DataCamp, laumi.me"
+  )
+```
+
+# Characteristics of Product category vs. Price
+
 ```{r product-vs-price}
 pallette <- c("#12db43", "#2adf4a", "#39e252", "#45e659", "#50e960",
               "#5aed67", "#63f16d", "#6bf474", "#73f87b", "#7bfb81", "#83ff88")
@@ -191,8 +218,8 @@ data |>
   )
 ```
 
+# Relationship bettwen Pet type vs. Total sales
 
-# Pet type vs. Total sales
 ```{r pet-vs-total-sales}
 pet_total <-
   data |> 
@@ -285,9 +312,10 @@ sf <-
 sp <- t.test(sales_usd ~ re_buy, data = data)
 # Sales plot
 data |> 
-  ggplot(aes(x = re_buy, y = sales_usd)) +
+  ggplot(aes(x = re_buy, y = sales_usd, fill = re_buy)) +
   geom_boxplot() +
   scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_brewer(type = "div", palette = 4) +
   theme_classic() +
   labs(
     title =
@@ -298,7 +326,7 @@ data |>
            "Not rebought mean: {filter(sf, re_buy == 'Not rebought')$mean}, ",
            "p-value: {format.pval(sp$p.value)}"),
     x = "Was item rebought?",
-    y = "Sales",
+    y = "Sales ($)",
     caption = "Michal Lauer for DataCamp, laumi.me"
   )
 ```
@@ -319,7 +347,6 @@ mtb <-
   filter(re_buy == "Rebought") |> 
   count(pet_type, product_category) |> 
   mutate(product_category = reorder_within(product_category, n, pet_type),
-         pet_type = str_to_title(pet_type),
          pet_type = fct_relevel(pet_type))
   
 mtb |> 
