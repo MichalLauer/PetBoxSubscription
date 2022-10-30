@@ -170,7 +170,7 @@ fct_count(data$pet_type)
 ```
 
 # Product vs. Price
-```{r }
+```{r product-vs-price}
 pallette <- c("#12db43", "#2adf4a", "#39e252", "#45e659", "#50e960",
               "#5aed67", "#63f16d", "#6bf474", "#73f87b", "#7bfb81", "#83ff88")
 data |> 
