@@ -265,27 +265,26 @@ The final question asked by the marketing team is:
 pets?
 
 ```{r more-likely-again}
-cnt_data <-
+mtb <-
   data |> 
-  count(re_buy, pet_type) |> 
-  mutate(pet_type = reorder_within(pet_type, n, re_buy))
-
-cnt_data |> 
-  ggplot(aes(x = pet_type, y = n, fill = re_buy)) +
-  geom_col(show.legend = F) + 
-  facet_wrap(vars(re_buy), scales = "free_x") +
+  filter(re_buy == "Rebought") |> 
+  count(pet_type, product_category) |> 
+  mutate(product_category = reorder_within(product_category, n, pet_type),
+         pet_type = str_to_title(pet_type),
+         pet_type = fct_relevel(pet_type))
+  
+mtb |> 
+  ggplot(aes(x = product_category, y = n, fill = pet_type)) +
+  geom_col(show.legend = F) +
+  facet_wrap(vars(pet_type), ncol = 2, scales = "free") +
+  coord_flip() +
   scale_x_reordered() +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 199)) +
   theme_classic() +
-  theme(
-    panel.grid.major.y = element_line(colour = "grey80"),
-    panel.grid.minor.y = element_line(colour = "grey90")
-  ) +
   labs(
-    title = "Most rebought items are for cats and dogs",
-    subtitle = "They are also most sold without a rebuy",
-    x = "Pet type",
-    y = "Total number of products",
+    title = "Most rebought products are for cats and dogs",
+    subtitle = "Top 3 producs for all animals are toys, snacks, and equipment",
+    x = "Product category",
+    y = "Total number of sales",
     caption = "Michal Lauer, laumi.me"
   )
 ```
