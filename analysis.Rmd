@@ -170,7 +170,9 @@ fct_count(data$pet_type)
 ```
 
 
-# Rebought products
+# Business questions
+
+## Rebought products
 
 The first question asked by the marketing team is:
 
@@ -218,7 +220,7 @@ From the figure above, it can be seen that
 (`r round(filter(rbt_data, re_buy == "Rebought")$p*100, 2)` %) of
 products are being rebought.
 
-# Sales for rebought items
+## Sales for rebought items
 
 The second question that is being asked is regarding sales.
 
@@ -257,7 +259,7 @@ data |>
 There is no significant difference between sales for rebought and Not rebought
 items.
 
-# Different producs for different pets
+## Different producs for different pets
 
 The final question asked by the marketing team is:
 
@@ -288,8 +290,3 @@ mtb |>
     caption = "Michal Lauer, laumi.me"
   )
 ```
-
-# Summary
-
-As the majority of items is being robought, the marketing team should implement
-their subscription box.
