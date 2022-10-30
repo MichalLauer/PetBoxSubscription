@@ -251,7 +251,7 @@ The first question asked by the marketing team is:
 
 > How many products are being purchased more than once?
 
-```{r rebougt-plot}
+```{r rebought-plot}
 # Compute data set for further analysis
 rbt_data <- 
   data |> 
@@ -334,7 +334,7 @@ data |>
 There is no significant difference between sales for rebought and Not rebought
 items.
 
-## Different producs for different pets
+## Different products for different pets
 
 The final question asked by the marketing team is:
 
@@ -358,7 +358,7 @@ mtb |>
   theme_classic() +
   labs(
     title = "Most rebought products are for cats and dogs",
-    subtitle = "Top 3 producs for all animals are toys, snacks, and equipment",
+    subtitle = "Top 3 products for all animals are toys, snacks, and equipment",
     x = "Product category",
     y = "Total number of sales",
     caption = "Michal Lauer for DataCamp, laumi.me"
