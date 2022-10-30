@@ -7,6 +7,5 @@ originally used for my
 I use it now to showcase my work.
 
 
-The data analysis is located in the [analysis.Rmd](analysis.Rmd) and a supporting
-results overview is located in [docs/...](docs/...). The written results outline
-the main takeaways and answers to business questions.
+The data analysis is located in the [analysis.Rmd](analysis.Rmd) and the written report
+is located on my [DataCamp profile](https://app.datacamp.com/workspace/w/a3a8ffa5-3924-4746-9f40-5e9c8648c245)
