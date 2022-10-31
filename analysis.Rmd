@@ -1,5 +1,5 @@
 ---
-title: "Vliv virtuality na výkonnost týmu"
+title: "Pet Box Subscription analysis"
 author: "Michal Lauer"
 date: "`r format(Sys.time(), format = '%d. %m. %Y')`"
 output:
