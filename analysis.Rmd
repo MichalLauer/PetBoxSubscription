@@ -16,7 +16,8 @@ editor_options:
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile,
                     encoding = encoding,
-                    output_dir = "output/")})
+                    output_dir = "output/",
+                    output_format = c("html_document", "pdf_document"))})
 ---
 ```{r setup, include=F}
 # Environment preparation
